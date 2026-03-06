@@ -363,13 +363,16 @@ if(saved)document.body.className=saved;
 
 renderGames(files);
    
-    function openIframe(url){
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+function openIframe(url){
+
+    const container = document.getElementById("embedContainer");
+    const frame = document.getElementById("gameFrame");
+
+    container.style.display = "block";
+    frame.src = url;
+
+    document.getElementById("gamesGrid").style.display = "none";
+
 }
 </script>
 </script>
