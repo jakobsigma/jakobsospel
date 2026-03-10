@@ -1157,15 +1157,8 @@ function sendChatMessage() {
           activePlayersEl.textContent = "Aktiva spelare: --";
         });
 
-        // Chat
-        chatRef = db.ref("global-chat");
-        chatRef.limitToLast(120).on("child_added", (snap) => {
-          addChatMessage(snap.val() || {});
-        });
-      } catch (err) {
-        activePlayersEl.textContent = "Aktiva spelare: --";
-        addSystemChatMessage("Kunde inte ansluta chatten.");
-      }
+        // Chat här!!!!!
+    
     })();
   </script>
 </body>
