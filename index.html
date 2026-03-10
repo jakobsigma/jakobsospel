@@ -600,6 +600,7 @@
       <button class="sidebar-btn" onclick="openIframe('https://studio.pickaxe.co/STUDIOGX4LHRY55GYHQ15/295XP68K97')"><span class="icon">🤖</span><span class="label">AI</span></button>
       <button class="sidebar-btn" onclick="openIframe('https://mattematikpluggeri.joe.dj')"><span class="icon">🔎</span><span class="label">Browser</span></button>
       <button class="sidebar-btn" onclick="openIframe('https://docs.google.com/forms/d/e/1FAIpQLScUxR7Ychb0ivMguYI-3BHwb8D3ZH2x7n1vkpXuYjNeVlU3Cg/viewform?usp=header')"><span class="icon">📩</span><span class="label">Förslag</span></button>
+     <button class="sidebar-btn" onclick="showUpdates()"><span class="icon">⬆</span><span class="label">Uppdateringar</span></button>
       <button class="sidebar-btn" onclick="openThemePopup()"><span class="icon">🎨</span><span class="label">Tema</span></button>
     </div>
 
@@ -643,7 +644,19 @@
         <h2 class="recommended-title">Rekommenderade spel:</h2>
         <div id="recommendedRow" class="recommended-row"></div>
       </div>
+<div id="updatesPage" style="display:none;margin-top:30px;">
+  <h2 style="font-size:28px;margin-bottom:15px;">⬆ Uppdateringar</h2>
 
+  <div id="updatesList" style="
+    background:rgba(0,0,0,.6);
+    padding:20px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.15);
+    line-height:1.6;
+    font-size:16px;
+  ">
+  </div>
+</div>
       <div class="games-grid" id="gamesGrid"></div>
     </div>
   </div>
@@ -701,7 +714,13 @@
     const chatInputEl = document.getElementById("chatInput");
     const chatSendEl = document.getElementById("chatSend");
     const activePlayersEl = document.getElementById("activePlayers"); // NYTT
-
+    const updates = [
+      "V4 släppt 🚀",
+      "Ny live chat",
+      "Admin panel tillagd",
+      "Fler spel tillagda",
+      "UI förbättringar"
+];
     const firebaseConfig = {
       apiKey: "AIzaSyDRnICpSXjxHQDqhGMZzFGvmcBjJC5RNaw",
       authDomain: "chatt-4d3c7.firebaseapp.com",
@@ -766,6 +785,27 @@
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") closeSidebar();
     });
+    function showUpdates(){
+
+  gamesGrid.style.display="none";
+  recommendedSection.style.display="none";
+  embedContainer.style.display="none";
+
+  const page=document.getElementById("updatesPage");
+  const list=document.getElementById("updatesList");
+
+  page.style.display="block";
+
+  list.innerHTML="";
+
+  updates.forEach(u=>{
+    const item=document.createElement("div");
+    item.style.marginBottom="8px";
+    item.textContent="• "+u;
+    list.appendChild(item);
+  });
+
+}
 
     function stopFakeLoaderTimers() {
       clearTimeout(fakeLoadTimeout);
