@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="logo.png" type="image/png">
 <title>Jakobs Spel 🎮</title>
 <style>
 :root{
@@ -17,6 +18,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var(--w);overflow-x:hidden;cursor:url('cursor.png') 0 0,auto!important;}
+*,*::before,*::after,button,a,[onclick],[role='button']{cursor:url('cursor.png') 0 0,auto!important;}
 .bg{position:fixed;inset:0;z-index:-1;}
 .bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(123,44,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(123,44,255,.07) 1px,transparent 1px);background-size:40px 40px;}
 .bg-noise{position:absolute;inset:0;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
@@ -253,6 +255,10 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var
 #questsOverlay .panelWin{width:min(480px,95vw);max-height:85vh;}
 #butikOverlay .panelWin{width:min(540px,95vw);max-height:85vh;}
 
+
+/* ---- RUNDA HORNEN PA ALLA POPUPS ---- */
+.chatBox,.modalBox,.panelWin,.sidebar,.toast{border-radius:var(--r)!important;}
+.sidePanel,.sugForm,.favItem,.shopItem,.questItem{border-radius:12px;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
