@@ -217,8 +217,7 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var
 .cursor-ring.visible{opacity:1;}
 
 </style>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="bg"><div class="bg-grid"></div><div class="bg-noise"></div><div class="bg-orb o1"></div><div class="bg-orb o2"></div><div class="bg-orb o3"></div></div>
@@ -345,29 +344,40 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var
 <script>
 
 /* =======================================================
-   FIREBASE-KONFIGURATION (för konton over enheter)
-   1. Ga till https://console.firebase.google.com
-   2. Skapa ett projekt (ex: jakobsospel)
-   3. Lagg till webbapp, kopiera konfigurationen hit
-   4. Aktivera Realtime Database i testlage
+   SUPABASE-KONFIGURATION (for konton over enheter)
+   1. Ga till https://supabase.com och skapa ett gratis projekt
+   2. Ga till Project Settings > API
+   3. Kopiera "Project URL" och "anon public" nyckeln hit
+   4. Skapa tabellerna med SQL nedan i Supabase SQL-editorn:
+
+   CREATE TABLE accounts (
+     username TEXT PRIMARY KEY,
+     password_hash TEXT NOT NULL,
+     is_admin BOOLEAN DEFAULT FALSE,
+     banned BOOLEAN DEFAULT FALSE
+   );
+   CREATE TABLE user_data (
+     username TEXT PRIMARY KEY,
+     coins INT DEFAULT 0, xp INT DEFAULT 0, level INT DEFAULT 1,
+     favorites JSONB DEFAULT '[]', games_played INT DEFAULT 0,
+     settings JSONB DEFAULT '{}'
+   );
+   ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE user_data ENABLE ROW LEVEL SECURITY;
+   CREATE POLICY "public" ON accounts FOR ALL USING (true) WITH CHECK (true);
+   CREATE POLICY "public" ON user_data FOR ALL USING (true) WITH CHECK (true);
    ======================================================= */
-var FIREBASE_CONFIG={
-  apiKey:"DIN_API_KEY",
-  authDomain:"DIN_PROJEKT.firebaseapp.com",
-  databaseURL:"https://DIN_PROJEKT-default-rtdb.firebaseio.com",
-  projectId:"DIN_PROJEKT",
-  storageBucket:"DIN_PROJEKT.appspot.com",
-  messagingSenderId:"DIN_SENDER_ID",
-  appId:"DIN_APP_ID"
-};
-var _db=null;
+var SUPABASE_URL="https://vqntfjxscvgzjrydopje.supabase.co";
+var SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxbnRmanhzY3ZnempyeWRvcGplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NDE4NTAsImV4cCI6MjA4OTMxNzg1MH0.0ZIkeqI6Y_KNapIL5os7xprtN0BJJsQiVCXLV6oHGWI";
+var _sb=null;
 try{
-  if(FIREBASE_CONFIG.apiKey!=="DIN_API_KEY"){
-    firebase.initializeApp(FIREBASE_CONFIG);
-    _db=firebase.database();
-    console.log("Firebase ansluten!");
+  if(SUPABASE_URL!=="DIN_SUPABASE_URL"){
+    _sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    console.log("Supabase ansluten!");
+  }else{
+    console.log("Supabase ej konfigurerat - anvander lokal lagring.");
   }
-}catch(e){console.warn("Firebase:",e);}
+}catch(e){console.warn("Supabase:",e);}
 
 /* ---- LJUD (Web Audio API) ---- */
 var _audioCtx=null;
@@ -416,12 +426,12 @@ function adminToggleAdmin(u){
   if(idx>=0){
     admins.splice(idx,1);
     localStorage.setItem("adminUsers",JSON.stringify(admins));
-    if(_db)_db.ref("accounts/"+u+"/isAdmin").set(false);
+    if(_sb)_sb.from("accounts").update({is_admin:false}).eq("username",u).then(function(){});
     toast(u+" ar inte langre admin","ok");
   }else{
     admins.push(u);
     localStorage.setItem("adminUsers",JSON.stringify(admins));
-    if(_db)_db.ref("accounts/"+u+"/isAdmin").set(true);
+    if(_sb)_sb.from("accounts").update({is_admin:true}).eq("username",u).then(function(){});
     toast(u+" ar nu admin!","ok");
   }
   renderAdminPanel();
@@ -443,7 +453,7 @@ function saveState(){
   var _sd={coins:state.coins,xp:state.xp,level:state.level,favorites:state.favorites,gamesPlayed:state.gamesPlayed||0,settings:state.settings};
   localStorage.setItem("jspel_"+state.user,JSON.stringify(_sd));
   localStorage.setItem("lastUser",state.user);
-  if(_db){_db.ref("users/"+state.user).set(_sd).catch(function(){});}
+  if(_sb){_sb.from("user_data").upsert({username:state.user,coins:_sd.coins,xp:_sd.xp,level:_sd.level,favorites:_sd.favorites,games_played:_sd.games_played,settings:_sd.settings},{onConflict:"username"}).then(function(){}).catch(function(){});}
 }
 function loadState(u){
   var d=localStorage.getItem("jspel_"+u);
@@ -690,25 +700,69 @@ function doLogin(){
   var mode=document.getElementById("loginModal").dataset.mode;
   var err=document.getElementById("loginError");
   if(!u||!p){err.textContent="Fyll i alla fält";err.style.display="block";return;}
-  if(mode==="reg"){
-    if(localStorage.getItem("acc_"+u)){err.textContent="Användarnamn taget";err.style.display="block";return;}
-    localStorage.setItem("acc_"+u,btoa(p));
-    loadState(u);state.user=u;state.isAdmin=isUserAdmin(u);
-    localStorage.setItem("lastUser",u);
-    if(_db){_db.ref("accounts/"+u).set({password:btoa(p),isAdmin:isUserAdmin(u),banned:false});}
-    addCoins(50,"Välkomstbonus!");
-    toast("Välkommen, "+u+"! +50 mynt");
+
+  if(_sb){
+    // --- Supabase-flöde (konton sparas online) ---
+    if(mode==="reg"){
+      _sb.from("accounts").select("username").eq("username",u).single().then(function(res){
+        if(res.data){err.textContent="Användarnamn taget";err.style.display="block";return;}
+        var initSettings={animations:true,sounds:true,darkMode:false,theme:"purple"};
+        _sb.from("accounts").insert({username:u,password_hash:btoa(p),is_admin:isUserAdmin(u),banned:false}).then(function(r){
+          if(r.error){err.textContent="Fel vid registrering: "+r.error.message;err.style.display="block";return;}
+          _sb.from("user_data").insert({username:u,coins:50,xp:0,level:1,favorites:[],games_played:0,settings:initSettings}).then(function(){});
+          localStorage.setItem("acc_"+u,btoa(p));
+          loadState(u);state.user=u;state.isAdmin=isUserAdmin(u);
+          localStorage.setItem("lastUser",u);
+          addCoins(0);
+          state.coins=50;updateHUD();saveState();
+          closeLoginModal();finishLogin();
+          toast("Välkommen, "+u+"! +50 mynt");
+        });
+      });
+    }else{
+      _sb.from("accounts").select("*").eq("username",u).single().then(function(res){
+        if(!res.data){err.textContent="Fel användarnamn eller lösenord";err.style.display="block";return;}
+        var acc=res.data;
+        if(acc.banned){err.textContent="Ditt konto är bannat";err.style.display="block";return;}
+        if(acc.password_hash!==btoa(p)){err.textContent="Fel användarnamn eller lösenord";err.style.display="block";return;}
+        _sb.from("user_data").select("*").eq("username",u).single().then(function(ud){
+          var d=ud.data||{};
+          state.user=u;
+          state.coins=d.coins||0;state.xp=d.xp||0;state.level=d.level||1;
+          state.favorites=d.favorites||[];state.gamesPlayed=d.games_played||0;
+          state.settings=Object.assign({animations:true,sounds:true,darkMode:false,theme:"purple"},d.settings||{});
+          state.isAdmin=acc.is_admin||isUserAdmin(u)||(btoa(btoa(p))===ADMINPW);
+          localStorage.setItem("acc_"+u,btoa(p));
+          localStorage.setItem("lastUser",u);
+          localStorage.setItem("jspel_"+u,JSON.stringify({coins:state.coins,xp:state.xp,level:state.level,favorites:state.favorites,gamesPlayed:state.gamesPlayed,settings:state.settings}));
+          closeLoginModal();finishLogin();
+          toast("Välkommen tillbaka, "+u+"!");
+          applyDarkMode(state.settings.darkMode===true);
+          if(state.settings.theme&&state.settings.theme!=="purple")applyTheme(state.settings.theme);
+        });
+      });
+    }
   }else{
-    if(localStorage.getItem("banned_"+u)){err.textContent="Ditt konto är bannat";err.style.display="block";return;}
-    var stored=localStorage.getItem("acc_"+u);
-    if(!stored||stored!==btoa(p)){err.textContent="Fel användarnamn eller lösenord";err.style.display="block";return;}
-    loadState(u);state.user=u;
-    state.isAdmin=isUserAdmin(u)||(btoa(btoa(p))===ADMINPW);
-    localStorage.setItem("lastUser",u);
-    toast("Välkommen tillbaka, "+u+"!");
+    // --- Lokalt läge (localStorage) ---
+    if(mode==="reg"){
+      if(localStorage.getItem("acc_"+u)){err.textContent="Användarnamn taget";err.style.display="block";return;}
+      localStorage.setItem("acc_"+u,btoa(p));
+      loadState(u);state.user=u;state.isAdmin=isUserAdmin(u);
+      localStorage.setItem("lastUser",u);
+      addCoins(50,"Välkomstbonus!");
+      toast("Välkommen, "+u+"! +50 mynt");
+    }else{
+      if(localStorage.getItem("banned_"+u)){err.textContent="Ditt konto är bannat";err.style.display="block";return;}
+      var stored=localStorage.getItem("acc_"+u);
+      if(!stored||stored!==btoa(p)){err.textContent="Fel användarnamn eller lösenord";err.style.display="block";return;}
+      loadState(u);state.user=u;
+      state.isAdmin=isUserAdmin(u)||(btoa(btoa(p))===ADMINPW);
+      localStorage.setItem("lastUser",u);
+      toast("Välkommen tillbaka, "+u+"!");
+    }
+    closeLoginModal();
+    finishLogin();
   }
-  closeLoginModal();
-  finishLogin();
 }
 function finishLogin(){
   document.getElementById("loginBtn").style.display="none";
