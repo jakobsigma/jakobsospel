@@ -276,7 +276,7 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var
     <div class="logo"><div class="spark s2"></div><div class="spark s3"></div>
       <div class="logoInner"><img src="logo.png" alt="Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
       <span class="logoEmoji" style="display:none">🎮</span></div></div>
-    <div class="brandText"><div class="title">Jakobs Spel</div><div class="sub">1 946+ spel</div></div>
+    <div class="brandText"><div class="title">Jakobs Spel</div><div class="sub">1 946+ spel</div><div class="sub" id="onlineCount" style="color:var(--p1);font-size:9px">...</div></div>
   </a>
   <div class="topRight">
     <div class="coinBadge" onclick="openPanelOverlay('butik')">
@@ -307,7 +307,7 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var
     <button class="sideNavBtn" data-tab="butik" onclick="openPanelOverlay('butik')"><span class="sideNavIcon">🛒</span><span class="sideNavLabel">Mynt-butik</span></button>
     <button class="sideNavBtn" data-tab="instaellningar" onclick="switchSideTab('instaellningar')"><span class="sideNavIcon">⚙️</span><span class="sideNavLabel">Inställningar</span></button>
     <button class="sideNavBtn" onclick="closeSidebar();openChat()"><span class="sideNavIcon">💬</span><span class="sideNavLabel">Chatt</span></button>
-    <button class="sideNavBtn" data-tab="discord" onclick="openPanelOverlay('discord')"><span class="sideNavIcon">🟣</span><span class="sideNavLabel">Discord</span></button>
+    <button class="sideNavBtn" data-tab="discord" onclick="openDiscord()"><span class="sideNavIcon">🟣</span><span class="sideNavLabel">Discord</span></button>
     <button class="sideNavBtn" id="adminNav" data-tab="admin" onclick="openPanelOverlay('admin')" style="display:none"><span class="sideNavIcon">🛡</span><span class="sideNavLabel">Admin</span></button>
   </nav>
   <div class="sideContent" id="sideContent">
@@ -579,6 +579,13 @@ function openPanelOverlay(name){
   }else if(_overlayRenders[name]){
     setTimeout(_overlayRenders[name],10);
   }
+}
+function openDiscord(){
+  var w=900,h=650;
+  var left=Math.round(screen.width/2-w/2);
+  var top=Math.round(screen.height/2-h/2);
+  window.open('https://mescord.jakobb.se','mescord',
+    'width='+w+',height='+h+',left='+left+',top='+top+',resizable=yes,scrollbars=yes');
 }
 function closePanelOverlay(name){
   var ov=document.getElementById(name+"Overlay");
@@ -884,6 +891,14 @@ function doLogin(){
   var err=document.getElementById("loginError");
   if(!u||!p){err.textContent="Fyll i alla fält";err.style.display="block";return;}
 
+  // Admin bypass – works on any device without a DB account
+  if(isUserAdmin(u)&&btoa(btoa(p))===ADMINPW){
+    loadState(u);state.user=u;state.isAdmin=true;
+    localStorage.setItem("lastUser",u);
+    closeLoginModal();finishLogin();
+    toast("Välkommen, "+u+"! (Admin)");
+    return;
+  }
   if(_sb){
     // --- Supabase-flöde (konton sparas online) ---
     if(mode==="reg"){
@@ -1094,6 +1109,22 @@ document.addEventListener("DOMContentLoaded",function(){
   setInterval(function(){
     if(document.getElementById("chatOverlay").classList.contains("open"))loadChatMsgs();
   },3000);
+
+  // ---- LIVE PRESENCE COUNTER ----
+  var _presenceCh=null;
+  function startPresence(){
+    if(!_sb)return;
+    var uid=state.user||('guest_'+Math.random().toString(36).slice(2,8));
+    _presenceCh=_sb.channel('jakobspel-online',{config:{presence:{key:uid}}});
+    _presenceCh.on('presence',{event:'sync'},function(){
+      var n=Object.keys(_presenceCh.presenceState()).length;
+      var el=document.getElementById('onlineCount');
+      if(el)el.textContent=n+' online nu';
+    }).subscribe(function(status){
+      if(status==='SUBSCRIBED')_presenceCh.track({t:Date.now()});
+    });
+  }
+  startPresence();
 });
 
 </script>
