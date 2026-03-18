@@ -227,7 +227,7 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var
 @keyframes barGrow{0%{width:0%;}40%{width:60%;}70%{width:82%;}100%{width:95%;}}
 .loader-msg{font-size:12px;color:var(--d);min-height:18px;}
 
-.browserOverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:none;align-items:center;justify-content:center;}.browserOverlay.open{display:flex;}.browserWin{width:95vw;height:92vh;max-width:1500px;background:var(--p3);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;transition:all .25s;box-shadow:0 30px 80px rgba(0,0,0,.6);}.browserWin.bfull{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:none!important;border-radius:0!important;}.browserBar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--glass);flex-shrink:0;}.browserBar h3{flex:1;margin:0;font-size:14px;font-weight:700;color:var(--w);}.browserBar button{background:none;border:none;color:var(--d);font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background .15s;}.browserBar button:hover{background:var(--glass);color:var(--w);}.browserFrame{flex:1;border:none;width:100%;}.panel-fade{animation:panelIn .25s ease;}
+.browserOverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:none;align-items:center;justify-content:center;}.browserOverlay.open{display:flex;}.browserWin{width:95vw;height:92vh;max-width:1500px;background:var(--p3);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;transition:all .25s;box-shadow:0 30px 80px rgba(0,0,0,.6);}.aiWin{width:min(800px,95vw);height:min(660px,95vh);max-width:800px;}.browserWin.bfull{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:none!important;border-radius:0!important;}.browserBar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--glass);flex-shrink:0;}.browserBar h3{flex:1;margin:0;font-size:14px;font-weight:700;color:var(--w);}.browserBar button{background:none;border:none;color:var(--d);font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background .15s;}.browserBar button:hover{background:var(--glass);color:var(--w);}.browserFrame{flex:1;border:none;width:100%;}.panel-fade{animation:panelIn .25s ease;}
 @keyframes panelIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
 /* Game frame loading */
 .game-loader{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:2;}
@@ -250,7 +250,7 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var
 #discordOverlay .panelWin{width:min(900px,95vw);height:min(640px,90vh);}
 #discordOverlay .panelBody{padding:0;}
 #discordOverlay iframe{width:100%;height:100%;border:none;display:block;}
-#adminOverlay .panelWin{width:min(520px,95vw);max-height:85vh;}
+#adminOverlay .panelWin{width:min(820px,95vw);max-height:88vh;}
 #favOverlay .panelWin{width:min(660px,95vw);max-height:88vh;}
 #questsOverlay .panelWin{width:min(480px,95vw);max-height:85vh;}
 #butikOverlay .panelWin{width:min(540px,95vw);max-height:85vh;}
@@ -590,15 +590,21 @@ function openBrowser(type){
   var frame=document.getElementById('browserFrame');
   var title=document.getElementById('browserTitle');
   if(!overlay)return;
+  var win=document.getElementById('browserWin');
   if(type==='ai'){
     if(title)title.textContent='🤖 Jakob AI';
     frame.src='UGS-Files/jakobai.html';
+    if(win)win.classList.add('aiWin');
   } else {
     if(title)title.textContent='🌐 Browser';
+    if(win)win.classList.remove('aiWin');
     frame.src='UGS-Files/browser.html';
   }
   overlay.classList.add('open');
   document.getElementById('browserWin').classList.remove('bfull');
+  var bTitle=(type==='ai'?'Jakob AI':'Browser');
+  showLoader(bTitle);
+  frame.onload=function(){hideLoader();frame.onload=null;};
 }
 function closeBrowser(){
   var overlay=document.getElementById('browserOverlay');
@@ -614,11 +620,15 @@ function toggleBrowserFull(){
   if(btn)btn.textContent=win.classList.contains('bfull')?'⤓':'⛶';
 }
 function openDiscord(){
-  var w=900,h=650;
-  var left=Math.round(screen.width/2-w/2);
-  var top=Math.round(screen.height/2-h/2);
-  window.open('https://mescord.jakobb.se','mescord',
-    'width='+w+',height='+h+',left='+left+',top='+top+',resizable=yes,scrollbars=yes');
+  showLoader('Discord');
+  setTimeout(function(){
+    hideLoader();
+    var w=900,h=650;
+    var left=Math.round(screen.width/2-w/2);
+    var top=Math.round(screen.height/2-h/2);
+    window.open('https://mescord.jakobb.se','mescord',
+      'width='+w+',height='+h+',left='+left+',top='+top+',resizable=yes,scrollbars=yes');
+  },400);
 }
 function closePanelOverlay(name){
   var ov=document.getElementById(name+"Overlay");
@@ -1103,6 +1113,8 @@ function handleAvatarUpload(input){if(!input.files||!input.files[0])return;var f
 function claimQuest(id){var today=new Date().toDateString();var key='quests_'+state.user+'_'+today;var saved=JSON.parse(localStorage.getItem(key)||'{"claimed":[]}');if(!saved.claimed)saved.claimed=[];if(saved.claimed.indexOf(id)>=0)return toast('Quest redan hämtad!','error');var quests=getQuests();var q=quests.find(function(q){return q.id===id;});if(!q||!q.done)return toast('Quest ej klar!','error');saved.claimed.push(id);localStorage.setItem(key,JSON.stringify(saved));addCoins(q.reward);toast('+'+q.reward+' mynt! Quest klar!','ok');renderQuestsPanel();}
 function applyTheme(name){var themes={purple:{"--p0":"#7b2cff","--p1":"#b56cff","--p2":"#3a00b7","--bg0":"#050008","--bg1":"#0b0014","--bg2":"#120022"},neon:{"--p0":"#00ffcc","--p1":"#00e5ff","--p2":"#007a5e","--bg0":"#000a08","--bg1":"#00150f","--bg2":"#001a10"},gold:{"--p0":"#ffaa00","--p1":"#ffd166","--p2":"#a06800","--bg0":"#0a0600","--bg1":"#130900","--bg2":"#1a0d00"},red:{"--p0":"#ff2d55","--p1":"#ff6b6b","--p2":"#8b0000","--bg0":"#080003","--bg1":"#100008","--bg2":"#160005"},blue:{"--p0":"#2979ff","--p1":"#82b1ff","--p2":"#0040ca","--bg0":"#000510","--bg1":"#000a1f","--bg2":"#000e2b"},pink:{"--p0":"#e91e8c","--p1":"#ff80c8","--p2":"#9c006a","--bg0":"#08000a","--bg1":"#120010","--bg2":"#180015"}};var t=themes[name]||themes.purple;var r=document.documentElement;Object.keys(t).forEach(function(k){r.style.setProperty(k,t[k]);});var p0=t['--p0'];document.querySelectorAll('[class*="bg-orb"]').forEach(function(el,i){if(i===0)el.style.background='radial-gradient(circle,'+p0+'44,transparent 70%)';else if(i===1)el.style.background='radial-gradient(circle,'+p0+'33,transparent 70%)';else el.style.background='radial-gradient(circle,'+p0+'22,transparent 70%)';});document.querySelectorAll('.bg-grid').forEach(function(el){el.style.backgroundImage='linear-gradient('+p0+'18 1px,transparent 1px),linear-gradient(90deg,'+p0+'18 1px,transparent 1px)';});state.settings.theme=name;localStorage.setItem('jspel_'+state.user,JSON.stringify({coins:state.coins,xp:state.xp,level:state.level,favorites:state.favorites,gamesPlayed:state.gamesPlayed,settings:state.settings}));}
 document.addEventListener("DOMContentLoaded",function(){
+  // Show loader immediately on page load
+  showLoader("Jakob's Game Library");
   document.querySelectorAll(".filterBtn").forEach(function(btn){
     btn.addEventListener("click",function(){
       document.querySelectorAll(".filterBtn").forEach(function(b){b.classList.remove("active");});
@@ -1175,6 +1187,7 @@ document.addEventListener("DOMContentLoaded",function(){
   }
   startPresence();
   applyLang();
+  setTimeout(hideLoader, 600);
 });
 
 
