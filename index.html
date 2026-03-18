@@ -630,7 +630,7 @@ function showLoader(title){
   if(msg){
     var msgs=_loaderMsgs.slice().sort(function(){return Math.random()-.5;});
     var i=0;msg.textContent=msgs[0];
-    _loaderMsgInterval=setInterval(function(){i=(i+1)%msgs.length;msg.textContent=msgs[i];},700);
+    _loaderMsgInterval=setInterval(function(){i=(i+1)%msgs.length;msg.textContent=msgs[i];},1500);
   }
 }
 function hideLoader(){
