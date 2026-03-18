@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Jakobs Spel — Sidan har flyttat</title>
+<style>
+:root{
+  --bg0:#050008;--bg1:#0b0014;--bg2:#120022;
+  --p0:#7b2cff;--p1:#b56cff;--p2:#3a00b7;
+  --w:#f5f0ff;--m:#c9b9ff;--d:#8a7bc2;
+  --line:rgba(181,108,255,.18);
+  --glass:rgba(12,6,24,.55);
+  --r:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var(--w);overflow:hidden;}
+
+.bg{position:fixed;inset:0;z-index:0;}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(123,44,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(123,44,255,.07) 1px,transparent 1px);background-size:40px 40px;}
+.bg-orb{position:absolute;border-radius:50%;filter:blur(80px);animation:drift 18s ease-in-out infinite alternate;}
+.bg-orb.o1{width:600px;height:600px;top:-200px;left:-200px;background:radial-gradient(circle,rgba(123,44,255,.25),transparent 70%);}
+.bg-orb.o2{width:400px;height:400px;bottom:-100px;right:-100px;background:radial-gradient(circle,rgba(58,0,183,.3),transparent 70%);animation-delay:-9s;}
+.bg-orb.o3{width:300px;height:300px;top:40%;left:60%;background:radial-gradient(circle,rgba(181,108,255,.15),transparent 70%);animation-delay:-4s;}
+@keyframes drift{0%{transform:translate(0,0) scale(1);}100%{transform:translate(40px,30px) scale(1.1);}}
+
+.center{position:relative;z-index:1;height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+
+.card{
+  background:var(--glass);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:48px 44px;
+  max-width:520px;
+  width:100%;
+  text-align:center;
+  backdrop-filter:blur(30px);
+  box-shadow:0 24px 80px rgba(0,0,0,.6);
+  animation:fadeUp .6s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
+
+.logo-wrap{
+  width:72px;height:72px;
+  border-radius:18px;
+  background:linear-gradient(135deg,var(--p2),var(--p0));
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;
+  margin:0 auto 24px;
+  position:relative;
+}
+.spark{position:absolute;border-radius:50%;background:var(--p1);animation:sparkle 2s ease-in-out infinite;}
+.spark.s1{width:5px;height:5px;top:8px;right:10px;animation-delay:-.7s;}
+.spark.s2{width:4px;height:4px;bottom:9px;left:8px;animation-delay:-1.4s;}
+@keyframes sparkle{0%,100%{opacity:.2;transform:scale(.8);}50%{opacity:1;transform:scale(1.3);}}
+
+.tag{
+  display:inline-block;
+  background:rgba(123,44,255,.2);
+  border:1px solid rgba(181,108,255,.3);
+  border-radius:20px;
+  padding:4px 14px;
+  font-size:11px;
+  font-weight:700;
+  color:var(--p1);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:18px;
+}
+
+h1{
+  font-size:clamp(26px,5vw,38px);
+  font-weight:900;
+  letter-spacing:-.02em;
+  line-height:1.1;
+  background:linear-gradient(135deg,var(--w) 0%,var(--p1) 60%,var(--p0) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:12px;
+}
+
+.desc{
+  font-size:15px;
+  color:var(--m);
+  line-height:1.65;
+  margin-bottom:32px;
+}
+.desc b{color:var(--w);font-weight:700;}
+
+.divider{height:1px;background:var(--line);margin:0 0 28px;}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;
+  padding:15px 28px;
+  border-radius:40px;
+  background:linear-gradient(135deg,var(--p0),var(--p2));
+  color:#fff;
+  font-size:15px;
+  font-weight:700;
+  text-decoration:none;
+  border:none;
+  cursor:pointer;
+  box-shadow:0 8px 28px rgba(123,44,255,.35);
+  transition:all .2s;
+  margin-bottom:12px;
+}
+.btn:hover{opacity:.9;transform:translateY(-2px);box-shadow:0 12px 36px rgba(123,44,255,.5);}
+.btn .arrow{font-size:18px;transition:transform .2s;}
+.btn:hover .arrow{transform:translateX(4px);}
+
+.note{
+  margin-top:22px;
+  font-size:12px;
+  color:var(--d);
+  display:flex;align-items:flex-start;gap:7px;
+  background:rgba(255,100,100,.06);
+  border:1px solid rgba(255,100,100,.12);
+  border-radius:12px;
+  padding:11px 14px;
+  text-align:left;
+  line-height:1.5;
+}
+.note-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.note-text{color:#ff9b9b;}
+
+.counter{margin-top:24px;font-size:12px;color:var(--d);}
+.counter span{color:var(--p1);font-weight:700;}
+</style>
+</head>
+<body>
+<div class="bg">
+  <div class="bg-grid"></div>
+  <div class="bg-orb o1"></div>
+  <div class="bg-orb o2"></div>
+  <div class="bg-orb o3"></div>
+</div>
+
+<div class="center">
+  <div class="card">
+    <div class="logo-wrap">
+      🎮
+      <div class="spark s1"></div>
+      <div class="spark s2"></div>
+    </div>
+
+    <div class="tag">Sidan har flyttat</div>
+
+    <h1>Jakobs Spel har fått ny adress</h1>
+
+    <p class="desc">
+      Den gamla versionen är borttagen.<br>
+      Alla <b>1 946+ spel</b>, ditt konto och dina favoriter<br>
+      finns nu på den nya sidan.
+    </p>
+
+    <div class="divider"></div>
+
+    <a class="btn" href="https://LÄNK-HIT.se" id="goBtn">
+      Gå till nya sidan <span class="arrow">→</span>
+    </a>
+
+    <div class="note">
+      <span class="note-icon">⚠</span>
+      <span class="note-text">Om du hade data sparad lokalt i webbläsaren kan den tyvärr inte överföras automatiskt. Skapa ett nytt konto på den nya sidan.</span>
+    </div>
+
+    <p class="counter">Omdirigerar automatiskt om <span id="countdown">10</span> sekunder…</p>
+  </div>
+</div>
+
+<script>
+var NEW_URL = "https://LÄNK-HIT.se";
+var t = 10;
+var el = document.getElementById("countdown");
+var interval = setInterval(function(){
+  t--;
+  el.textContent = t;
+  if(t <= 0){
+    clearInterval(interval);
+    window.location.href = NEW_URL;
+  }
+}, 1000);
+document.getElementById("goBtn").addEventListener("click", function(e){
+  e.preventDefault();
+  clearInterval(interval);
+  window.location.href = NEW_URL;
+});
+</script>
+</body>
+</html>
